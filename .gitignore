@@ -1,0 +1,4 @@
+virtualenv/
+static_cdn/
+media_cdn/
+blog/blog/.env

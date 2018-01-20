@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %} Comment {% endblock title %}
+
+{% block content %}
+<div class="col-sm-6 col-sm-offset-3">
+				<blockquote>
+				<p>{{comment.content}}</p>
+				<footer>by: {{ comment.user}} | hace: {{ comment.timestamp|timesince}}
+					{% if comment.children.count > 0 and comment.children.count < 2 %}
+						| {{comment.children.count }} Comentario
+					{% endif %}
+					{% if comment.children.count > 1 %}
+						| {{comment.children.count }} Comentarios
+					{% endif %}
+
+					| <a class="comment-reply-res" href="#">Responder</a>
+					| <a href="{{ comment.get_absolute_url}}">Regresar</a>
+					{% if request.user == comment.user %} 
+					|
+					<a href="{{ comment.get_delete_url }}">Borrar</a><br>
+					{% endif %}
+				</footer>
+
+				{#  once iterated comments, now iter comment for get functions children, and the same data (self) #}
+				{#children Comment for Response  to parrent comments ! #}
+				<div class="comment-reply">
+					{% for child_comment in comment.children %}
+						<blockquote>
+							<p>{{child_comment.content}}</p>
+							<footer>by: {{ child_comment.user}} | hace: {{ child_comment.timestamp|timesince}}<br>
+								{#TODO: fix content type ! #}
+						{# 	{% if request.user == child_comment.user %}|<a href="{{child_comment.get_delete_url }}">Borrar</a><br>{% endif %} #}
+							</footer>
+						</blockquote>
+					{% endfor %}
+					{# auth is required #}
+					{% if request.user.is_authenticated %}
+						<form action="." method="POST">{% csrf_token %}
+							{{ form|crispy }}
+							<input type="hidden" name="parent_id" value="{{ comment.id }}">
+							<input type="submit" value="Responder", class="btn btn-list-sc">
+
+						</form>
+					{% else %}
+						<p><strong>Hay que iniciar sesión para dejar un comentario !!</strong></p>
+					{% endif %}
+				</div>
+			</blockquote>
+</div>
+	
+	
+{% endblock content %}

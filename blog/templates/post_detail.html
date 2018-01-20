@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %} Detail {% endblock title %}
+
+{% block content %}
+<div class='col-sm-6 col-sm-offset-3'>
+	{# get obj_post from context #}
+	{% if obj_post.image %}
+		<img src="{{ obj_post.image.url }}" class="img-responsive">
+	{% endif %}
+	<h3>
+		<h3> <strong>{{ obj_post.title }}</strong></h3>
+		{% if obj_post.draft %}
+			<span style="color:red">Draft</span>
+			<small>{{ obj_post.timestamp }}</small>
+		{% endif %}
+	</h3>
+
+	 <p> Tiempo de lectura: {% if obj_post.read_time < 2 %} menos de 2 minutos {% else %}{{ obj_post.read_time}} Minutos{% endif %}</p>
+
+	<div class="post-detail-art">
+		<h5>{{ obj_post.get_markdown}}</h5>
+	</div> 
+	
+	{# form for comments ! with auth  auth is required for writing #}
+	{% if request.user.is_authenticated %}		
+		<p class="lead"></p>
+		<h4> <strong> Comentarios </strong></h4>	
+		<form action="." method="POST">{% csrf_token %}
+			{{ comment_form|crispy }}
+			<input type="submit" value="Publicar", class="btn btn-list-sc">
+		</form>
+	{% else %}
+	<p><strong>Hay que iniciar sesión para dejar un comentario !!</strong></p>
+	{% endif %}
+
+
+		{# Logic for itself comments#}
+		{% for comment in comments %}
+			<blockquote>
+				<p>{{comment.content}}</p>
+				<footer>by: {{ comment.user}} | hace: {{ comment.timestamp|timesince}}
+					{% if comment.children.count > 0 and comment.children.count < 2 %}
+						| {{comment.children.count }} Comentario
+					{% endif %}
+					{% if comment.children.count > 1 %}
+						| {{comment.children.count }} Comentarios
+					{% endif %}
+					| <a class="comment-reply-res" href="#">Responder</a> 
+					| <a  href="{{ comment.get_absolute_urlf}}">Threads</a><br></footer>
+
+				{#  once iterated comments, now iter comment for get functions children, and the same data (self) #}
+				{#children Comment for Response  to parrent comments ! #}
+				<div class="comment-reply">
+					{% for child_comment in comment.children %}
+						<blockquote>
+							<p>{{child_comment.content}}</p>
+							<footer>by: {{ child_comment.user}} | hace: {{ child_comment.timestamp|timesince}}<br></footer>
+						</blockquote>
+					{% endfor %}
+						{# auth is required for writing #}
+						{% if request.user.is_authenticated %}
+							<form action="." method="POST">{% csrf_token %}
+								{{ comment_form|crispy }}
+								<input type="hidden" name="parent_id" value="{{ comment.id }}">
+								<input type="submit" value="Responder", class="btn btn-list-sc">
+							</form>
+						{% else %}
+							<p><strong>Hay que iniciar sesión para dejar un comentario !!</strong></p>
+						{% endif %}
+				</div>
+			</blockquote>			
+		{% endfor %}
+	</div>
+
+	{# plugin cooments and like  #}
+	<!--div class="fb-comments" data-href="{{ request.build_absolute_uri }}" data-numposts="5"></div>-->
+	<div class="fb-like" data-href="{{ request.build_absolute_uri }}" data-layout="button" data-action="like" data-size="small" data-show-faces="true" data-share="true"></div>
+	
+	{# plugins for share post #}
+	<h4>Comparte el post en:</h4>
+	<div class="share-social">
+		<a href="https://www.facebook.com/sharer/sharer.php?{{ request.build_absolute_uri }}">
+		<i class="fa fa-facebook-square fa-3x" aria-hidden="true"></i></a>
+
+		<a href="https://twitter.com/home?status=Crea%20tu%20blog%20dale%20click%20{{ request.build_absolute_uri }}">
+		<i class="fa fa-twitter-square fa-3x" aria-hidden="true"></i></a>
+
+		<a href='https://plus.google.com/share?url={{ request.build_absolute_uri }}'><i class="fa fa-google-plus-square fa-3x" aria-hidden="true"></i></a>
+
+		<a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.build_absolute_uri }}&title=Mira%20mi%20blog&
+		summary=Mira%20lo%20que%20publico%20en%20mi%20blog%20de%20tecnolog%C3%ADa%2C%20dale%20click.">
+		<i class="fa fa-linkedin-square fa-3x" aria-hidden="true"></i>
+	</div>
+	
+</div>
+{% endblock content %}

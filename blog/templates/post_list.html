@@ -1,0 +1,86 @@
+{% extends "base.html" %}  {# inherit all tags from html file(base.html) #}
+{% block title %} lists {% endblock title %}
+{% block content %}
+
+{# <h4>kakakka</h4> #}
+<div class="col-sm-5 col-sm-offset-4">
+    <!-- form for searching whit param: 'q'
+   <form class="col-sm-6 col-sm-offset-2" method="GET">
+        <div class="form-group">
+        <h3 class="col-sm-offset-4"><strong>Posts</strong></h3>
+          <h4 class="search-text"><input type="text" class="form-control" placeholder="Buscar Post" name="q"
+          value="{{ request.GET.q }}"></h4>
+          <button type="submit" class="col-sm-12 btn btn-list-sc" >Buscar33 <i class="fa fa-search fa-1x" aria-hidden="true"></i></button>
+        </div>
+  </form>
+ -->
+
+{# Iter obj_post for give data and use it #}
+{% for obj in obj_post %}
+<div class="row">
+<div class="col-sm-11 ">
+    <div class="thumbnail">
+    {% if obj.image %}
+    	 <img src="{{ obj.image.url }}" class="img-responsive">
+    {% endif %}
+      <div class="caption post-detail-art">
+            <h3><a id="link-title"   href="{{ obj.get_absolute_urlf }}"><h4 id="obj_title">{{ obj.title }}</a>
+            <small>{{ obj.publish }}</small></h4></h3>
+            {% if obj.draft %}  
+                <h3>Draft</h3>   
+            {% endif %}
+            {% if obj.publish > today %}
+                <h4>Post Futuro</h4>
+            {% endif %}
+            {% if obj.user.get_full_name %}
+                <h4>Author: {{ obj.user.get_full_name }}</h4>
+            {% else %}
+                <h4>Author: {{ obj.user  }}</h4>
+            {% endif %}
+           
+            <p> {{ obj.get_markdown|truncatechars_html:60  }}</p>
+            <p><a href="{{ obj.get_absolute_urlf }}" role="button">Ver</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<div class="floating  col-sm-offset-10 ">
+  <a href="{% url 'posts:create' %}" class="btn btn-list-sc btn-fab"><i class="material-icons">add</i></a>
+</div>
+
+<!-- whit class-based generic views ListView #}
+{#  <h2>Publishers</h2>
+    <ul>
+        {% for publisher in object_list %}
+            <h3>{{ publisher.title }}</h3>
+            <h3>{{ publisher.content }}</h3>
+        {% endfor %}
+    </ul> -->
+
+{# Snippet for pagination ref: Django documenttion #}
+<div class="pagination">
+    <span class="step-links">
+        {% if obj_post.has_previous %}
+            {# <a href="?page=1">&laquo; Primero</a> #}
+            <a href="?page={{ obj_post.previous_page_number }} {% if  request.GET.q %} &q= {{ request.GET.q }} {% endif %}">
+            Anterior</a>
+        {% endif %}
+
+        <span class="current">
+            Pagina {{ obj_post.number }} de {{ obj_post.paginator.num_pages }}.
+        </span>
+
+        {# add if request.GET.q for add in url q and page example: ?page=2%20%20&q=%20docker #}
+        {% if obj_post.has_next %}
+            <a href="?page={{ obj_post.next_page_number }} {% if  request.GET.q %} &q= {{ request.GET.q }} {% endif %}">
+            Siguiente</a>
+            {#<a href="?page={{ obj_post.paginator.num_pages }}">Ultimo &raquo;</a> #}
+        {% endif %}
+    </span>
+</div>
+
+</div>
+
+{% endblock content %}

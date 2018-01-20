@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+ {% block title %} {{ title }} {% endblock title %}
+{% load crispy_forms_tags %}
+
+ {% block head_extra %}
+   {{ form.media }}
+{% endblock head_extra %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <div class="panel panel-default">
+            <div class="panel-heading">{{ title}}</div>
+            <div class="panel-body">
+              <form method="POST" action="" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  {{ form|crispy }}
+                   <div class="col-md-8 col-md-offset-4">
+                      <input type="submit" value="{{ title }}" class="btn btn-primary">
+                  </div>
+              </form> 
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+{% block footer %}
+<div class="col-md-6 col-md-offset-5">
+<footer>
+  <a href="#">Olvidaste tu contraseña</a>
+  <p>Crea una nueva cuenta <a href="{% url 'login' %}">aqui</a></p>
+</footer>
+</div>
+{% endblock footer %}
