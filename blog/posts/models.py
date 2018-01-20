@@ -83,7 +83,6 @@ class Post(models.Model):
 
 #create_slug use for create slug whit the title name
 def create_slug(instance, new_slug=None):
-	print(instance)
 	slug = slugify(instance.title) #get title and slug is equals to title, generate slug with slugify module
 	if new_slug is not None:	#if new_slug isn't null, slug equals to new slug
 		slug = new_slug

@@ -25,10 +25,7 @@ def create(request):
 
 	if form.is_valid() and request.user.is_authenticated():
 		instance = form.save(commit=False)#Dont save the post for : commit=False)
-		print(form.cleaned_data)
 		instance.user = request.user
-		print('*****')
-		print(instance.user)
 		#more code, change code like modidy content etc..
 		instance.save()#save data
 		messages.success(request, 'Post created.')
@@ -58,7 +55,6 @@ def detail(request, slug):
 	}
 	form = CommentForm(request.POST or None, initial=initial_data)
 	if form.is_valid():
-		print(form.cleaned_data)
 		# !what happend her !! TODO: Fix this is the correct
 
 		# c_type = form.cleaned_data.get('content_type')
@@ -67,9 +63,6 @@ def detail(request, slug):
 		content_type = ContentType.objects.get_for_model(Post)
 		obj_id = form.cleaned_data.get('object_id')
 		content_data = form.cleaned_data.get('content')
-		print('*****')
-		print(request.POST.get('parent_id'), type(request.POST.get('parent_id')))
-
 
 		# children comments, het id parent comment and filter the id whit id parent,
 		parent_obj = None
@@ -90,7 +83,6 @@ def detail(request, slug):
 							content=content_data,
 							parent= parent_obj,
 			)
-		print(new_comment.content_object.get_absolute_urlf())
 		return HttpResponseRedirect(new_comment.content_object.get_absolute_urlf())
 	'''Get .models form app comments, into models is: Comment.objects.filter_by_instance, was create myself!! 
 	comments = Comment.objects.filter_by_instance(obj_post)'''
