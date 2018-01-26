@@ -60,7 +60,7 @@ class Post(models.Model):
 		#return reverse_lazy('posts:detail', kwargs={'id': self.id}) with id, info: after doing slugify and signals
 		return reverse_lazy('posts:detail', kwargs={'slug': self.slug})
 
-	#get_markdown: do contetn type html in markdwon and save like safe !!!
+	#get_markdown: do content type html in markdwon and save like safe !!!
 	def get_markdown(self):
 		content = self.content
 		markdown_text = markdown(content)
