@@ -23,7 +23,7 @@ def create(request):
 		# print (request.POST.get('content'))
 		pass
 
-	if form.is_valid() and request.user.is_authenticated():
+	if form.is_valid() and request.user.is_authenticated:
 		instance = form.save(commit=False)#Dont save the post for : commit=False)
 		instance.user = request.user
 		#more code, change code like modidy content etc..
