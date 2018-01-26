@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'crispy_forms',
     #my apps
     'posts',
-    'comments'
+    'comments',
+    #api rest
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
