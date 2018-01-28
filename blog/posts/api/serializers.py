@@ -52,9 +52,12 @@ class PostDetailSerializer(ModelSerializer):
 		c_qs = Comment.objects.filter_by_instance(obj)
 		comments = CommentListSerializer(c_qs, many=True).data
 		return comments
+
 # PostCreateUpdateSerializer: only serialize some fields  for updating
 class PostCreateUpdateSerializer(ModelSerializer):
 
 	class Meta:
 		model = Post
 		fields = ('title', 'content', 'publish', 'image')
+
+		

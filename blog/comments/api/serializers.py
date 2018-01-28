@@ -3,7 +3,66 @@
 
 from rest_framework.serializers import ModelSerializer, HyperlinkedIdentityField, SerializerMethodField
 from comments.models import Comment
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin, RetrieveModelMixin
 
+User = get_user_model()
+
+''' importante: crea un comentario desde rest framewrok con un model(post), slug(ark), parent_id(solo si es comm padre)
+ y user, todo viene desde el request del client y se pasan estos parametros en views, nota: se hace asi por usar ContentType
+ y todo lo relacionado a llaves genericas, es mas complicado pero ayuda mucho ! '''
+ # create_comment_serializer: create a comment from rest framewrok, and return class CommentCreateSeralize  !!
+def create_comment_serializer(model_type=None, slug=None, parent_id=None, user=None):
+	# set in url: example: http://localhost:8000/api/comments/create/?type=post&slug=ark&parent_id=67
+	class CommentCreateSeralize(ModelSerializer):
+		class Meta:
+			model = Comment
+			fields = ['id', 'content', 'timestamp']
+
+		def __init__(self, *args, **kwargs):
+			self.model_type = model_type
+			self.slug = slug
+			self.parent_obj = None
+
+			# only exec if the cooment created is child
+			if parent_id:
+				parent_qs = Comment.objects.filter(id=parent_id)
+				if parent_qs.exists() and parent_qs.count() == 1:
+					self.parent_obj = parent_qs.first()
+			return super(CommentCreateSeralize, self).__init__(*args, **kwargs)
+
+		# validate: valid if the model and the object is ok, return data from endpoint
+		def validate(self, data):
+			model_type = self.model_type
+			model_qs = ContentType.objects.filter(model=model_type)
+			if not model_qs.exists() or model_qs.count() != 1:
+				raise ValidationError("No es tipo de contenido valido !")
+			SomeModel = model_qs.first().model_class()
+			obj_qs = SomeModel.objects.filter(slug=self.slug)
+			if not obj_qs.exists() or obj_qs.count() != 1:
+				raise ValidationError("Esto no es un slug para el tipo de contenido")
+			return data
+
+		# create: once done validation, it's create the comment !
+		def create(self, validated_data):
+			content = validated_data.get('content')
+			if user:
+				main_user = user
+			else:
+				main_user = User.objects.all().first()
+			model_type = self.model_type
+			slug = self.slug
+			parent_obj = self.parent_obj
+			# create_by_model_type comes from models !
+			comment = Comment.objects.create_by_model_type(
+						model_type, slug, content, main_user,
+						parent_obj=parent_obj,
+					)
+			return comment
+
+	return CommentCreateSeralize
 
 # CommentListSerializer: serialize cooment's List
 class CommentListSerializer(ModelSerializer):
@@ -37,4 +96,12 @@ class CommentDetailSerializer(ModelSerializer):
 
 	def get_reply_count(self, obj):
 			return obj.children().count()
+
+
+# CommentEditSerializer: serialize commentd with mixins
+class CommentEditSerializer(ModelSerializer):
+
+	class Meta:
+		model = Comment
+		fields = ['id', 'content', 'timestamp',]
 

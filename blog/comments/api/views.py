@@ -2,13 +2,14 @@
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, RetrieveDestroyAPIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin, RetrieveModelMixin
 from django.db.models import Q
 
 from posts.api.permission import IsOwnerOrReadOnly
 from posts.api.pagination import CustomPagination
 
 from comments.views import Comment
-from .serializers import CommentDetailSerializer, CommentListSerializer
+from .serializers import CommentEditSerializer, CommentDetailSerializer, CommentListSerializer, create_comment_serializer
 
 # CRUD API REST
 
@@ -30,7 +31,15 @@ class CommentListAPIView(ListAPIView):
 
 # CommentCreateAPIView: create  a new Comment from rest framework, only if user Is Authenticated, method = Comment
 class CommentCreateAPIView(CreateAPIView):
-	pass
+	queryset = Comment.objects.all()
+	permission_classes = [IsAuthenticated]
+
+	def get_serializer_class(self):
+		data = self.request.data
+		model_type = self.request.GET.get('type')
+		slug = self.request.GET.get('slug')
+		parent_id = self.request.GET.get('parent_id', None)
+		return create_comment_serializer(model_type=model_type, slug=slug, parent_id=parent_id, user=self.request.user)
 
 # CommentDetailAPIView: get each Comment's json with slug or id from endpoint, method = GET 
 class CommentDetailAPIView(RetrieveAPIView):
@@ -38,7 +47,25 @@ class CommentDetailAPIView(RetrieveAPIView):
 	serializer_class = CommentDetailSerializer
 	permission_classes = [IsAuthenticatedOrReadOnly]
 
-# CommentUpdateAPIView: update Comment's json with slug from endpoint(slug generate aut. by fun create_slug into Comments.models) method = PUT
+'''the mixin classes provide action methods rather
+than defining the handler methods, such as .get() and .post(), directly. This allows for more flexible composition of behavior.'''
+# CommentEditAPIView: use mixins for: get, retrive, delete,
+class CommentEditAPIView(RetrieveAPIView, UpdateModelMixin, DestroyModelMixin):
+	queryset = Comment.objects.filter(id__gte=0)
+	serializer_class = CommentEditSerializer
+
+	# def get(self, request, *args, **kwargs):
+	# 	return self.retrieve(request, *args, **kwargs)
+
+	# put: return UpdateModelMixin
+	def put(self, request, *args, **kwargs):
+		return self.update(request, *args, **kwargs)
+
+	# delete: return DestroyModelMixin
+	def delete(self, request, *args, **kwargs):
+		return self.destroy(request, *args, **kwargs)
+
+
 class CommentUpdateAPIView(RetrieveUpdateAPIView):
 	pass
 
