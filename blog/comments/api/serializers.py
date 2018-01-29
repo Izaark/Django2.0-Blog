@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin, RetrieveModelMixin
 
+from users.api.serializers import UserListSerializer
 User = get_user_model()
 
 ''' importante: crea un comentario desde rest framewrok con un model(post), slug(ark), parent_id(solo si es comm padre)
@@ -68,9 +69,36 @@ def create_comment_serializer(model_type=None, slug=None, parent_id=None, user=N
 class CommentListSerializer(ModelSerializer):
 	# reply_count: serialize field for add more data !
 	reply_count = SerializerMethodField()
+	url = HyperlinkedIdentityField(view_name='comments-api:thread') #get the comment url !
 	class Meta:
 		model = Comment
-		fields = ['id', 'content', 'timestamp', 'object_id', 'reply_count']
+		fields = ['url','id', 'content', 'timestamp', 'reply_count']
+
+	# get_reply_count: get children function from Comment model and return count, func: it's necesary for each SerializerMethodField
+	def get_reply_count(self, obj):
+			return obj.children().count()
+
+
+# TODO: by error: yperlinkedIdentityField` requires the request in the serializer context. Add `context={'request': request}
+# CommentPostsSerializer: to posts url in fields
+class CommentPostsSerializer(ModelSerializer):
+	# reply_count: serialize field for add more data !
+	reply_count = SerializerMethodField()
+	class Meta:
+		model = Comment
+		fields = ['id', 'content', 'timestamp', 'reply_count']
+
+	# get_reply_count: get children function from Comment model and return count, func: it's necesary for each SerializerMethodField
+	def get_reply_count(self, obj):
+			return obj.children().count()
+
+# CommentSerializer: serialize cooment's List
+class CommentSerializer(ModelSerializer):
+	# reply_count: serialize field for add more data !
+	reply_count = SerializerMethodField()
+	class Meta:
+		model = Comment
+		fields = ['id', 'content', 'timestamp', 'reply_count', 'object_id']
 
 	# get_reply_count: get children function from Comment model and return count, func: it's necesary for each SerializerMethodField
 	def get_reply_count(self, obj):
@@ -78,17 +106,29 @@ class CommentListSerializer(ModelSerializer):
 
 # CommentChildSerializer: serialize data for comments children
 class CommentChildSerializer(ModelSerializer):
+		user = UserListSerializer(read_only=True)
 		class Meta:
 			model = Comment
-			fields = ['id', 'user', 'content', 'timestamp']
+			fields = ['id', 'content', 'timestamp', 'user']
 
 # CommentSerializer: serialize comment's detail
 class CommentDetailSerializer(ModelSerializer):
 	replies = SerializerMethodField()
 	reply_count = SerializerMethodField()
+	content_object_url = SerializerMethodField()
+	user = UserListSerializer(read_only=True)
 	class Meta:
 		model = Comment
-		fields = ['id', 'user', 'content', 'timestamp', 'content_type', 'object_id','parent', 'reply_count', 'replies']
+
+		fields = ['id', 'content', 'timestamp', 'content_type', 'object_id', 'content_object_url', 'parent', 'user', 'reply_count', 'replies']
+		read_only_fields = ['content_type', 'object_id', 'parent', 'user']
+
+	# get_content_object_url: get post url from posts get_api_url
+	def get_content_object_url(self, obj):
+		try:
+			return obj.content_object.get_api_url()
+		except:
+			return None
 
 	# get_replies: return all data serialize from CommentChildSerializer with children function
 	def get_replies(self, obj):
@@ -96,12 +136,8 @@ class CommentDetailSerializer(ModelSerializer):
 
 	def get_reply_count(self, obj):
 			return obj.children().count()
-
-
-# CommentEditSerializer: serialize commentd with mixins
-class CommentEditSerializer(ModelSerializer):
-
-	class Meta:
-		model = Comment
-		fields = ['id', 'content', 'timestamp',]
+			# fix !
+			# if obj.is_parent:
+			# 	return obj.children().count()
+			# return 0
 

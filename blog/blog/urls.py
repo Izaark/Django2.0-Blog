@@ -5,7 +5,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from users.views import login_view, logout_view, register_view
 
-#7088961310 mauro lpz , 200 d
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,6 +17,7 @@ urlpatterns = [
     # api restframework !
     path('api/posts/', include('posts.api.urls', namespace='posts-api')),
     path('api/comments/', include('comments.api.urls', namespace='comments-api')),
+    path('api/users/', include('users.api.urls', namespace='users-api')),
 ]
 if settings.DEBUG:
 	urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
