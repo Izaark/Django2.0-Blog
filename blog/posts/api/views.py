@@ -3,8 +3,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, I
 from rest_framework.filters import SearchFilter, OrderingFilter
 # from django_filters.rest_framework import DjangoFilterBackend
 
-# from rest_framework.response import Response
-# from rest_framework import status
+from rest_framework.response import Response
+from rest_framework import status
+import json
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from django.db.models import Q
@@ -14,7 +15,8 @@ from .serializers import PostListSerializer, PostDetailSerializer, PostCreateUpd
 from .permission import IsOwnerOrReadOnly
 from .pagination import PostLimitOffSetPagination, PostPageNumberPagination, CustomPagination
 
-# CRUD API REST
+''' CRUD API REST 
+The Generic views provided by REST framework allow you to quickly build API views that map closely to your database models.''' 
 
 # PostListAPIView: get all Posts, method = GET
 class PostListAPIView(ListAPIView):
@@ -39,12 +41,12 @@ class PostCreateAPIView(CreateAPIView):
 	queryset = Post.objects.all()
 	serializer_class = PostCreateUpdateSerializer
 	permission_classes = [IsAuthenticated]
+	pagination_class = CustomPagination
 
-	# perform_create: save user from request (It would be not necessary) 
 	def perform_create(self, serializer):
 		serializer.save(user=self.request.user)
 
-# IsAuthenticated: get each post's json with slug or id from endpoint, method = GET 
+# PostDetailAPIView: get each post's json with slug or id from endpoint, method = GET 
 class PostDetailAPIView(RetrieveAPIView):
 	queryset = Post.objects.all()
 	serializer_class = PostDetailSerializer
@@ -78,7 +80,9 @@ class PostDetailUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
 	serializer_class = PostDetailSerializer
 	lookup_field = 'slug'
 	permission_classes = [IsAdminUser]
+	pagination_class = CustomPagination
 
+''' The APIView class for working with class-based views '''
 
 # post_list: list posts with functions, is like flask !
 @api_view(['GET'])
@@ -87,5 +91,42 @@ def post_list(request):
         posts = Post.objects.all()
         serializer = PostListSerializer(posts, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# post_create: create post with api view, it have more controll !!
+@api_view(['POST'])
+def post_create(request, *args, **kwargs):
+	if request.method == 'POST':
+		query = request.data
+		print(query)
+		serializer = PostCreateUpdateSerializer(data= query)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_201_CREATED)
+		else:
+			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+	return Response(serializer.errors, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+# post_detail: retrive and put post by slug, it have more controll !
+@api_view(['GET', 'PUT'])
+def post_detail(request, slug):
+	try:
+		post = Post.objects.get(slug=slug)
+	except Post.DoesNotExist:
+		return Response(status=status.HTTP_404_NOT_FOUND)
+
+	if request.method == 'GET':
+		serializer = PostDetailSerializer(post)
+		return Response(serializer.data)
+
+	elif request.method == 'PUT':
+		serializer = PostDetailSerializer(post, data=request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data)
+		else:
+			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+	return Response(serializer.errors, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 

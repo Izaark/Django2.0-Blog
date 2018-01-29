@@ -16,7 +16,7 @@ class PostPageNumberPagination(PageNumberPagination):
 
 #CustomPagination: replace the default pagination output style with a modified format !
 class CustomPagination(PageNumberPagination):
-	page_size = 5
+	page_size = 20
 	def get_paginated_response(self, data):
 		return Response({
 			'links': {
