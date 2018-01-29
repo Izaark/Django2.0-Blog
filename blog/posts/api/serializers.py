@@ -4,9 +4,10 @@
 from rest_framework.serializers import ModelSerializer, HyperlinkedIdentityField, SerializerMethodField
 from posts.models import Post
 
-from comments.api.serializers import CommentListSerializer
+from comments.api.serializers import CommentPostsSerializer
 from comments.models import Comment
 
+from users.api.serializers import UserListSerializer
 
 # PostlistSerializer: serialize post's List
 class PostListSerializer(ModelSerializer):
@@ -24,7 +25,7 @@ class PostListSerializer(ModelSerializer):
 class PostDetailSerializer(ModelSerializer):
 
 	# SerializerMethodField: It can be used to add any sort of data to the serialized representation of your object
-	user = SerializerMethodField()
+	user = UserListSerializer()
 	image = SerializerMethodField()
 	markdown = SerializerMethodField()
 	comments = SerializerMethodField()
@@ -33,8 +34,6 @@ class PostDetailSerializer(ModelSerializer):
 		model = Post
 		fields = ('id', 'user', 'title', 'slug', 'image', 'content', 'updated', 'timestamp', 'publish','read_time', 'markdown', 'comments')
 
-	def get_user(self, obj):
-		return obj.user.username
 
 	def get_image(self, obj):
 		try:
@@ -50,11 +49,13 @@ class PostDetailSerializer(ModelSerializer):
 		content_type = obj.get_content_type
 		objct_id = obj.id
 		c_qs = Comment.objects.filter_by_instance(obj)
-		comments = CommentListSerializer(c_qs, many=True).data
+		comments = CommentPostsSerializer(c_qs, many=True).data
 		return comments
+
 # PostCreateUpdateSerializer: only serialize some fields  for updating
 class PostCreateUpdateSerializer(ModelSerializer):
 
 	class Meta:
 		model = Post
 		fields = ('title', 'content', 'publish', 'image')
+

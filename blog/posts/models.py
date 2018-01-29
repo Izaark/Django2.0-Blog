@@ -45,6 +45,9 @@ class Post(models.Model):
 	#instance
 	objects = PostManager()
 
+	# get_api_url: get url for content_object_url in comments !
+	def get_api_url(self):
+		return reverse_lazy('posts-api:detail', kwargs={'slug': self.slug})
 
 	#Meta Class: Do things apart of data up this
 	class Meta:
