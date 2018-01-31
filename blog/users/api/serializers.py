@@ -8,16 +8,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
+from rest_framework_jwt.settings import api_settings
+
 User = get_user_model()
-
-
 # UserListSerializer: get all user's fields
 class UserListSerializer(ModelSerializer):
 	class Meta:
 		model = User
 		fields = ['id', 'username', 'email']
 
-# UserDetailSerializer: get some fields to posts and comments user field!
+# UserDetailSerializer: get user's detail
 class UserDetailSerializer(ModelSerializer):
 	class Meta:
 		model = User
@@ -27,9 +27,11 @@ class UserDetailSerializer(ModelSerializer):
 class UserRegisterSerializer(ModelSerializer):
 	# register more fileds out modelForm
 	email2 = EmailField(label='Confirmar Email')
+	token = CharField(allow_blank=True, read_only=True)
+
 	class Meta:
 		model = User
-		fields = ['username', 'email', 'email2', 'password']
+		fields = ['token','username', 'email', 'email2', 'password']
 		extra_kwargs = {'password': { 'write_only': True}}
 
 	#validate_email: valid if email1 its equals to emal2, and if email exists in db
@@ -47,7 +49,7 @@ class UserRegisterSerializer(ModelSerializer):
 	# validate_email2: valid if email2 its equals to emal1
 	def validate_email2(self, value):
 		data = self.get_initial()
-		email1 = data.get('email1')
+		email1 = data.get('email2')
 		email2 = value
 		if email1 != email2:
 			raise ValidationError("Los email no coinciden")
@@ -61,18 +63,25 @@ class UserRegisterSerializer(ModelSerializer):
 		user_obj = User(username=username, email=email)
 		user_obj.set_password(password)
 		user_obj.save()
-		return validated_data
 
+		# create token from class
+		token = GenerateToken()
+		validated_data['token'] = token.create(user_obj)
+
+		return validated_data
 
 # UserLiginSerializer: set fields for login user 
 class UserLiginSerializer(ModelSerializer):
 	token = CharField(allow_blank=True, read_only=True)
 	username = CharField()
 	email = EmailField(label='Direccion de Email')
+
+
 	class Meta:
 		model = User
-		fields = ['token','username', 'email']
+		fields = ['token','username', 'email', 'password']
 		extra_kwargs = {'password': { 'write_only': True}}
+
 
 
 	# validate: valid if email, username, password are correct !
@@ -96,8 +105,26 @@ class UserLiginSerializer(ModelSerializer):
 			if not user_obj.check_password(password):
 				raise ValidationError('Las credencilas son incorrectas, intenta otra vez')
 
-		data['token'] = 'random token'
+		# create token from class
+		class_token = GenerateToken()
+		#data['token'] = self.create_token(user_obj)
+		data['token'] = class_token.create(user_obj)
 		return data
+
+
+# GenerateToken: Creating a new token manually info: http://getblimp.github.io/django-rest-framework-jwt/#additional-settings
+class GenerateToken:
+
+	def create(self, obj):
+		jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+		jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+		payload = jwt_payload_handler(obj)
+		token = jwt_encode_handler(payload)
+		print('en clases')
+		return token
+
+
 
 
 

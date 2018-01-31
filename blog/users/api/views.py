@@ -1,8 +1,7 @@
 
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.mixins import UpdateModelMixin
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,7 +12,7 @@ from posts.api.permission import IsOwnerOrReadOnly
 from posts.api.pagination import CustomPagination
 
 from .serializers import UserRegisterSerializer, UserLiginSerializer, UserListSerializer, UserDetailSerializer
-
+from rest_framework_jwt.settings import api_settings
 
 User = get_user_model()
 
@@ -22,25 +21,26 @@ class UserDetailAPIView(RetrieveAPIView):
 	queryset = User.objects.all()
 	serializer_class = UserDetailSerializer
 	# lookup_field = 'username'
-	permission_classes = [IsAuthenticatedOrReadOnly]
+	permission_class = [IsAdminUser]
 
 # UserListAPIView: Get all users ! method = GET 
 class UserListAPIView(ListAPIView):
 	queryset = User.objects.all()
 	serializer_class = UserListSerializer
-	permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+	permission_class = [IsAdminUser]
 	pagination_class = CustomPagination
 
 # UserRegisterApiView: Register a new user method = POST 
 class UserRegisterApiView(CreateAPIView):
 	queryset = User.objects.all()
 	serializer_class = UserRegisterSerializer
+	permission_class = [AllowAny]
 
 # Using the APIView class is pretty much the same as using a regular View class, as usual
 # UserLoginApiView: login user with APIView is like view !  method = POST 
 class UserLoginApiView(APIView):
-	permission_class = [AllowAny]
 	serializer_class = UserLiginSerializer
+	permission_class = [AllowAny]
 
 	# post get data from client and pass to UserLiginSerializer
 	def post(self, request, *args, **kwargs):
