@@ -1,6 +1,6 @@
 
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, RetrieveDestroyAPIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin, RetrieveModelMixin
 from django.db.models import Q
@@ -20,6 +20,7 @@ class CommentListAPIView(ListAPIView):
 	filter_backends = [SearchFilter, OrderingFilter]
 	search_fields = ['id', 'content', 'user__username']
 	pagination_class = CustomPagination
+	permission_classes = [IsAuthenticated]
 
 	# get_queryset: get param q form uri
 	def get_queryset(self, *args, **kwargs):
@@ -50,7 +51,7 @@ than defining the handler methods, such as .get() and .post(), directly. This al
 class CommentDetailAPIView(RetrieveAPIView, UpdateModelMixin, DestroyModelMixin):
 	queryset = Comment.objects.filter(id__gte=0) #id__gte=0: filter: id is greater or equals than zero
 	serializer_class = CommentDetailSerializer
-	permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+	permission_classes = [IsOwnerOrReadOnly]
 
 	# def get(self, request, *args, **kwargs):
 	# 	return self.retrieve(request, *args, **kwargs)

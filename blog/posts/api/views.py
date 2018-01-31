@@ -22,7 +22,7 @@ The Generic views provided by REST framework allow you to quickly build API view
 class PostListAPIView(ListAPIView):
 	queryset = Post.objects.all()
 	serializer_class = PostListSerializer
-	# permission_classes = [AllowAny]
+	permission_classes = [AllowAny]
 	filter_backends = [SearchFilter, OrderingFilter]
 	search_fields = ['id', 'title' ,'user__first_name','user__username']
 	pagination_class = CustomPagination
@@ -51,7 +51,7 @@ class PostDetailAPIView(RetrieveAPIView):
 	queryset = Post.objects.all()
 	serializer_class = PostDetailSerializer
 	lookup_field = 'slug'
-	permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+	permission_classes = [AllowAny]
   
 # PostUpdateAPIView: update post's json with slug from endpoint(slug generate aut. by fun create_slug into posts.models) method = PUT
 class PostUpdateAPIView(RetrieveUpdateAPIView):
@@ -59,7 +59,7 @@ class PostUpdateAPIView(RetrieveUpdateAPIView):
 	queryset = Post.objects.all()
 	serializer_class = PostCreateUpdateSerializer
 	lookup_field = 'slug'
-	permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+	permission_classes = [IsOwnerOrReadOnly]
 	# permission_classes if the user isn't auth only read, and only can update if is owner's post(IsOwnerOrReadOnly)
 
 	def perform_update(self, serializer):
@@ -72,7 +72,7 @@ class PostDeleteAPIView(RetrieveDestroyAPIView):
 	serializer_class = PostDetailSerializer
 	lookup_field = 'slug'
 	# permission_classes if the user isn't auth only read, and only can delete if is owner's post(IsOwnerOrReadOnly)
-	permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+	permission_classes = [IsOwnerOrReadOnly]
 
 # PostDetailUpdateDeleteAPIView: only AdminUser can use this class !!  method = [GET, PUT and DELETE]
 class PostDetailUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
