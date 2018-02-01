@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import sys
 import datetime
+# import jwt
+# from jwt.contrib.algorithms.pycrypto import RSAAlgorithm
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -161,7 +164,7 @@ REST_FRAMEWORK = {
     # ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication', #set before test all endpoints with basisession
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication', #set before test all endpoints with basicsession
         #'rest_framework.authentication.BasicAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -170,7 +173,17 @@ REST_FRAMEWORK = {
         )
 }
 
+# module_dir = os.path.dirname(__file__)  # get current directory
+# private_key = os.path.join(module_dir, 'private_key.pem')
+# print(private_key)
+# public_key = os.path.join(module_dir, 'public.pem')
 
+JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM')
+JWT_VERIFY = os.environ.get('JWT_VERIFY')
+JWT_VERIFY_EXPIRATION = os.environ.get("JWT_VERIFY_EXPIRATION")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+
+#TODO: SessionAuthentication, como combinar registro y login para que no lo afecte JSONWebTokenAuthentication
 #JWT_AUTH setting for auth, it can add more control deppends !
 JWT_AUTH = {
     'JWT_ENCODE_HANDLER':
@@ -188,20 +201,20 @@ JWT_AUTH = {
     'JWT_RESPONSE_PAYLOAD_HANDLER':
     'rest_framework_jwt.utils.jwt_response_payload_handler',
 
-    # 'JWT_SECRET_KEY': settings.SECRET_KEY, todo: set this and keys !!
+    'JWT_SECRET_KEY': JWT_SECRET_KEY,
     'JWT_GET_USER_SECRET_KEY': None,
     'JWT_PUBLIC_KEY': None,
-    'JWT_PRIVATE_KEY': None,
-    'JWT_ALGORITHM': 'HS256',
-    'JWT_VERIFY': True,
-    'JWT_VERIFY_EXPIRATION': False, # if is false is infinity
+    'JWT_PRIVATE_KEY': None, #set for RS256 if not JWT_SECRET_KEY with HS256
+    'JWT_ALGORITHM': JWT_ALGORITHM,
+    'JWT_VERIFY': JWT_VERIFY,
+    'JWT_VERIFY_EXPIRATION': JWT_VERIFY_EXPIRATION, # if is false is infinity
     'JWT_LEEWAY': 0,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=40),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=300),
     'JWT_AUDIENCE': None,
     'JWT_ISSUER': None,
 
     'JWT_ALLOW_REFRESH': False,
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(seconds=20), # if es true add orig_iat time !!
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=500), # if es true add orig_iat time !!
 
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_AUTH_COOKIE': None,

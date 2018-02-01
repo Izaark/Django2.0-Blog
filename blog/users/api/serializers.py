@@ -11,6 +11,7 @@ from django.db.models import Q
 from rest_framework_jwt.settings import api_settings
 
 User = get_user_model()
+
 # UserListSerializer: get all user's fields
 class UserListSerializer(ModelSerializer):
 	class Meta:
@@ -70,8 +71,8 @@ class UserRegisterSerializer(ModelSerializer):
 
 		return validated_data
 
-# UserLiginSerializer: set fields for login user 
-class UserLiginSerializer(ModelSerializer):
+# UserLoginSerializer: set fields for login user 
+class UserLoginSerializer(ModelSerializer):
 	token = CharField(allow_blank=True, read_only=True)
 	username = CharField()
 	email = EmailField(label='Direccion de Email')
@@ -84,7 +85,7 @@ class UserLiginSerializer(ModelSerializer):
 
 
 
-	# validate: valid if email, username, password are correct !
+	# validate: valid if email, username, password are correct ! todo: valite with token
 	def validate(self, data):
 		user_obj = None
 		email = data.get('email', None)
@@ -107,7 +108,7 @@ class UserLiginSerializer(ModelSerializer):
 
 		# create token from class
 		class_token = GenerateToken()
-		#data['token'] = self.create_token(user_obj)
+		#data['token'] = self.create_token(user_obj) #in the same class
 		data['token'] = class_token.create(user_obj)
 		return data
 
@@ -118,10 +119,8 @@ class GenerateToken:
 	def create(self, obj):
 		jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 		jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-
 		payload = jwt_payload_handler(obj)
 		token = jwt_encode_handler(payload)
-		print('en clases')
 		return token
 
 
