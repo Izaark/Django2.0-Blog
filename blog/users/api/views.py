@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from posts.api.permission import IsOwnerOrReadOnly
 from posts.api.pagination import CustomPagination
 
-from .serializers import UserRegisterSerializer, UserLiginSerializer, UserListSerializer, UserDetailSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer, UserListSerializer, UserDetailSerializer
 from rest_framework_jwt.settings import api_settings
 
 User = get_user_model()
@@ -39,13 +39,13 @@ class UserRegisterApiView(CreateAPIView):
 # Using the APIView class is pretty much the same as using a regular View class, as usual
 # UserLoginApiView: login user with APIView is like view !  method = POST 
 class UserLoginApiView(APIView):
-	serializer_class = UserLiginSerializer
+	serializer_class = UserLoginSerializer
 	permission_class = [AllowAny]
 
-	# post get data from client and pass to UserLiginSerializer
+	# post get data from client and pass to UserLoginSerializer
 	def post(self, request, *args, **kwargs):
 		data = request.data
-		serializer = UserLiginSerializer(data=data)
+		serializer = UserLoginSerializer(data=data)
 		if serializer.is_valid(raise_exception=True):
 			new_data = serializer.data
 			return Response(new_data, status=status.HTTP_200_OK)
